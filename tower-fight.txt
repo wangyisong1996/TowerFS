@@ -1,0 +1,2 @@
+( echo -n fight >> "$1" ) && ( cat .fight_log )
+
