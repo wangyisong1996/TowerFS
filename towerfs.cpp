@@ -352,7 +352,47 @@ struct PlayerStatus {
 		}
 		return (h2 - 1) / (a1 - d2) * (a2 - d1);
 	}
-	
+	void fight_monster(int &HP,int ATK,int DEF,int &mHP,int mATK,int mDEF) {
+		int round = 0;
+		char buf[1000];
+		while(true)
+		{
+			sprintf(buf, "\nRound %d\n",++round);
+			fight_log += buf;
+			if(ATK<=mDEF)
+				sprintf(buf, "You attacked the monster but nothing happend\n");
+			else
+			if(mHP>ATK-mDEF)
+			{
+				sprintf(buf, "Monster taken %d point(s) of damage.\nMonster's HP is %d now.\n",ATK-mDEF,mHP-ATK+mDEF);
+				mHP-=ATK-mDEF;
+			}
+			else
+			{
+				sprintf(buf, "Monster taken %d point(s) of damage.\nMonster's HP is %d now.\n",mHP,0);
+				mHP=0;
+			}
+			fight_log += buf;
+			if(mHP==0)
+				break;
+			if(mATK<=DEF)
+				sprintf(buf, "The monster attacked you but nothing happend\n");
+			else
+			if(HP>mATK-DEF)
+			{
+				sprintf(buf, "You taken %d point(s) of damage.\nYour HP is %d now.\n",mATK-DEF,HP-mATK+DEF);
+				HP-=mATK-DEF;
+			}
+			else
+			{
+				sprintf(buf, "You taken %d point(s) of damage.\nYour HP is %d now.\n",HP,0);
+				HP=0;
+			}
+			fight_log += buf;
+			if(HP==0)
+				break;
+		}
+	}
 	bool do_fight(std::string monster_name) {
 		if (HP == 0) {
 			fight_log = "You were dead, so you can't fight with anyone\n";
@@ -370,24 +410,32 @@ struct PlayerStatus {
 		}
 		
 		fight_log += "Monster status:\n";
-		char buf[100];
+		char buf[1000];
 		sprintf(buf, "HP: %d\nATK: %d\nDEF %d\nGOLD: %d\n", mHP, mATK, mDEF, mGOLD);
 		fight_log += std::string(buf);
 		fight_log += "\n";
 		
 		int damage = calc_damage(ATK, DEF, mHP, mATK, mDEF);
 		
-		if (damage == -1 || damage >= HP) {
+		if (damage == -1) {
+			fight_log += "Either you or the monster can make damage to each other.After played for 233 years...\n";
+			fight_log += "You died\n";
+			HP = 0;
+			return false;
+		}
+		if (damage >= HP) {
+			fight_monster(HP,ATK,DEF,mHP,mATK,mDEF);
 			fight_log += "You have taken too much damage ...\n";
 			fight_log += "You died\n";
 			HP = 0;
 			return false;
 		} else {
-			sprintf(buf, "You have taken %d points of damage\n", damage);
+			fight_monster(HP,ATK,DEF,mHP,mATK,mDEF);
+			sprintf(buf, "You win!!!\nYou have taken %d points of damage in total.\n", damage);
 			fight_log += std::string(buf);
 			sprintf(buf, "You got %d GOLD\n", mGOLD);
 			fight_log += std::string(buf);
-			HP -= damage;
+			//HP -= damage;
 			GOLD += mGOLD;
 		}
 		
