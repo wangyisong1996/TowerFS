@@ -393,6 +393,16 @@ struct PlayerStatus {
 				break;
 		}
 	}
+	
+	bool do_open(std::string name){
+		if (GOLD>=1)
+		{
+			open_log = "Succeed, costs 1 GOLD";
+			return true; 
+		}
+		return false;
+	}
+	
 	bool do_fight(std::string monster_name) {
 		if (HP == 0) {
 			fight_log = "You were dead, so you can't fight with anyone\n";
@@ -522,6 +532,15 @@ struct NodeEventStatus {
 		}
 	}
 	
+	int do_open(std::string name) {
+		if (type == "none") {
+			return -EPERM;
+		} else if (type == "golddoor") {
+			player->do_open(name);
+			return 0;
+		}
+	}
+	
 	void list_files(std::vector<std::string> &files) {
 		if (type == "none") {
 			return;
@@ -628,6 +647,10 @@ struct NodeStatus {
 		} else {
 			return -EPERM;
 		}
+	}
+	
+	int do_open(std::string name) {
+		return event1->do_open(name);
 	}
 	
 	void list_files(std::vector<std::string> &files) {
@@ -872,6 +895,10 @@ struct TowerGame {
 	
 	int write(const char *path, const char *buffer, int size, int offset) {
 		std::string content(buffer, size);
+		if (content == "open") {
+			int ret = do_open(path);
+			return ret;
+		}
 		if (content == "fight") {
 			int ret = do_fight(path);
 			if (ret == 0) {
@@ -881,6 +908,49 @@ struct TowerGame {
 		} else {
 			return -EPERM;
 		}
+	}
+	
+	int do_open(std::string _path) {
+		std::vector<std::string> path = split_path(_path);
+		
+		NodeStatus *node = status->nodes[0];
+		int len_path = (int) path.size();
+		
+		// Check for files in root dir
+		if (len_path == 1) {
+			if (path[0] == "README") {
+				return -EPERM;
+			}
+		}
+		
+		for (int i = 0; i < len_path; i++) {
+			std::string name = path[i];
+			NodeStatus *next_node;
+			std::string next_node_name;
+			int ret = node->walk(name, next_node_name);
+			if (ret == 0) {
+				node = status->node_map[next_node_name];
+			} else if (ret == -ENOENT) {
+				// Check for monsters and other events
+				// Must be a file
+				if (i + 1 != len_path) {
+					return -ENOENT;
+				}
+				ret = node->do_open(path[i]);
+				if (ret == 0) {
+					return 0;
+				} else if (ret == -ENOENT) {
+					// Check for tools
+					return -EPERM;
+				} else {
+					return ret;
+				}
+			} else {
+				return ret;
+			}
+		}
+		
+		return -EPERM;
 	}
 	
 	int do_fight(std::string _path) {
