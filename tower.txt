@@ -8,6 +8,24 @@ Red Slime
 RSLM
 40 12 2 2
 
+8
+YellowKey
+YK
+RedKey
+RK
+BlueKey
+BK
+RedBottle
+RB
+BlueBottle
+BB
+RedStone
+RS
+BlueStone
+BS
+Treasure
+TS
+
 4
 
 Start
@@ -21,16 +39,26 @@ Room 1
 monster
 1
 GSLM
-none
-1
-golddoor Room 3
+obj
+3
+YellowKey
+RedStone
+RedBottle
+2
+passage Room 2
+passage Room 3
 
 Room 2
 monster
 2
 GSLM
 RSLM
-none
+obj
+4
+Treasure
+RedKey
+RedKey
+BlueKey
 1
 passage Room 3
 

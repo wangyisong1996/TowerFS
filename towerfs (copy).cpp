@@ -11,7 +11,6 @@
 #include <vector>
 #include <map>
 #include <algorithm>
-#include <assert.h>
 
 // TODO: Add destructors
 
@@ -146,9 +145,6 @@ struct NodeEventConfig {
 	int n_monsters;
 	std::vector<std::string> monsters;
 	
-	int n_obj;
-	std::vector<std::string> obj;
-	
 	NodeEventConfig() {
 		type = "none";
 	}
@@ -162,12 +158,6 @@ struct NodeEventConfig {
 			monsters.clear();
 			for (int i = 0; i < n_monsters; i++) {
 				monsters.push_back(s->read_line());
-			}
-		} else if (type == "obj") {
-			n_obj = s->read_int();
-			obj.clear();
-			for (int i = 0; i < n_obj; i++) {
-				obj.push_back(s->read_line());
 			}
 		} else {
 			// TODO: Throw more error info
@@ -216,17 +206,6 @@ struct NodeConfig {
 	}
 };
 
-struct Obj {
-	std::string name;
-	std::string type;
-	int cnt;
-	Obj(Scanner *s) {
-		name = s->read_line();
-		type = s->read_line();
-		cnt = 0;
-	}
-};
-
 struct TowerConfig {
 	int init_HP, init_ATK, init_DEF, init_GOLD;
 	
@@ -237,21 +216,6 @@ struct TowerConfig {
 	int n_nodes;
 	std::vector<NodeConfig *> nodes;
 	std::map<std::string, NodeConfig *> node_map;
-	
-	int n_obj;
-	std::vector<Obj *> obj;
-	std::map<std::string, Obj *> obj_map;
-	
-	void init_obj(Scanner *s) {
-		n_obj = s->read_int();
-		for (int i = 0; i< n_obj; ++i)
-			obj.push_back(new Obj(s));
-			
-		for (Obj *conf : obj) {
-			obj_map[conf->name] = conf;
-			obj_map[conf->type] = conf;
-		}
-	}
 	
 	void init_monsters(Scanner *s) {
 		n_monsters = s->read_int();
@@ -325,7 +289,6 @@ struct TowerConfig {
 		init_GOLD = s->read_int();
 		
 		init_monsters(s);
-		init_obj(s);
 		init_nodes(s);
 		
 		delete s;
@@ -337,13 +300,6 @@ struct TowerConfig {
 			throw "Invalid monster name";
 		}
 		return monster_map[name]->name;
-	}
-	
-	bool get_obj_status(std::string name) {
-		if (obj_map.count(name) == 0)
-			return false;
-		++(obj_map[name]->cnt);
-		return true;
 	}
 	
 	bool get_monster_status(std::string name, int &HP, int &ATK, int &DEF, int &GOLD) {
@@ -367,11 +323,7 @@ struct PlayerStatus {
 	
 	int HP, ATK, DEF, GOLD;
 	
-	std::string fight_log,open_log;
-	
-	int n_obj;
-	
-	std::vector<Obj *> obj;
+	std::string fight_log;
 	
 	PlayerStatus(TowerConfig *config) {
 		this->config = config;
@@ -379,34 +331,12 @@ struct PlayerStatus {
 		ATK = config->init_ATK;
 		DEF = config->init_DEF;
 		GOLD = config->init_GOLD;
-		n_obj = config->n_obj;
-		for(auto i:config->obj)
-			obj.push_back(i);
 	}
 	
 	std::string get_status() {
 		char buf[100];
-		sprintf(buf, "HP: %d\nATK: %d\nDEF %d\nGOLD: %d\n\n", HP, ATK, DEF, GOLD);
-		std::string w="";
-		for(auto i:obj)
-		if(i->name != "RedBottle" && i->name != "RB" && i->name != "BlueBottle" && i->name != "BB" && i->name != "RedStone" &&\
-		 i->name != "RS" && i->name != "BlueStone" && i->name != "BS" && i->name != "Treasure" && i->name != "TS")
-		{
-			if(i->cnt>0)
-			{
-				char buf2[100];
-				w=w+i->name;
-				if(i->cnt!=1)
-				{
-					sprintf(buf2,"%d",i->cnt);
-					std::string tmpp(buf2);
-					w=w+"\t\t"+tmpp;
-				}
-				w+="\n";
-			}
-		}
+		sprintf(buf, "HP: %d\nATK: %d\nDEF %d\nGOLD: %d\n", HP, ATK, DEF, GOLD);
 		std::string ret(buf);
-		ret=ret+w+"\n";
 		if (HP == 0) {
 			ret = "You were dead\n" + ret;
 		}
@@ -465,38 +395,12 @@ struct PlayerStatus {
 	}
 	
 	bool do_open(std::string name){
-		if (!config->get_obj_status(name)) {
-			throw "Unknown obj error";
-		}
-		open_log = "Pickup "+name+"\n";
-		if (name == "RB" || name == "RedBottle")
+		if (GOLD>=1)
 		{
-			open_log += "+ 100HP\n";
-			HP += 100;
+			open_log = "Succeed, costs 1 GOLD";
+			return true; 
 		}
-		if (name == "BB" || name == "BlueBottle")
-		{
-			open_log += "+ 200HP\n";
-			HP += 200;
-		}
-		if (name == "RS" || name == "RedStone")
-		{
-			open_log += "+ 1 ATK\n";
-			ATK += 1;
-		}
-		if (name == "BS" || name == "BlueStone")
-		{
-			open_log += "+ 1 DEF\n";
-			DEF += 1;
-		}
-		if (name == "TB" || name == "Treasure")
-		{
-			open_log += "+ 5 ATK\n+ 5 DEF\n+ 500 HP\n";
-			ATK += 5;
-			DEF += 5;
-			HP += 500;
-		}
-		return true;
+		return false;
 	}
 	
 	bool do_fight(std::string monster_name) {
@@ -552,10 +456,6 @@ struct PlayerStatus {
 		return fight_log;
 	}
 	
-	std::string get_open_log() {
-		return open_log;
-	}
-	
 };
 
 struct NodeEventStatus {
@@ -567,7 +467,6 @@ struct NodeEventStatus {
 	
 	// Map monster_show_name -> monster_full_name
 	std::map<std::string, std::string> alive_monsters;
-	std::map<std::string, std::string> pickable_obj;
 	
 	NodeEventStatus(NodeEventConfig *config, TowerConfig *tower_config, PlayerStatus *player) {
 		this->config = config;
@@ -591,21 +490,6 @@ struct NodeEventStatus {
 				alive_monsters[show_name] = name;
 			}
 		}
-		if (type == "obj") {
-			std::map<std::string, int> obj_count_map;
-			for (std::string name : config->obj) {
-				//name = tower_config->get_monster_full_name(name);
-				std::string show_name = name;
-				int count = ++obj_count_map[name];
-				if (count > 1) {
-					char buf[10];
-					sprintf(buf, "%d", count);
-					show_name += ' ';
-					show_name += buf;
-				}
-				pickable_obj[show_name] = name;
-			}
-		}
 	}
 	
 	bool is_killed() {
@@ -613,16 +497,6 @@ struct NodeEventStatus {
 			return true;
 		} else if (type == "monster") {
 			return alive_monsters.size() == 0;
-		} else {
-			return false;
-		}
-	}
-	
-	bool is_picked() {
-		if (type == "none") {
-			return true;
-		} else if (type == "obj") {
-			return pickable_obj.size() == 0;
 		} else {
 			return false;
 		}
@@ -636,14 +510,6 @@ struct NodeEventStatus {
 				return -ENOENT;
 			} else {
 				content = "Don't touch me !!! I'll kill you !!!\n";
-				can_exec = false;
-				return 0;
-			}
-		} else if (type == "obj") {
-			if (pickable_obj.count(name) == 0) {
-				return -ENOENT;
-			} else {
-				content = "Maybe treasures.Pick it !\n";
 				can_exec = false;
 				return 0;
 			}
@@ -669,18 +535,8 @@ struct NodeEventStatus {
 	int do_open(std::string name) {
 		if (type == "none") {
 			return -EPERM;
-		} else if (type == "obj") {
-			if (pickable_obj.count(name) == 0)
-			{
-				return -EPERM;
-			}
-			else
-			{
-				std::string obj_name = pickable_obj[name];
-				if(player->do_open(obj_name)) {
-					pickable_obj.erase(name);
-				}
-			}
+		} else if (type == "golddoor") {
+			player->do_open(name);
 			return 0;
 		}
 	}
@@ -690,10 +546,6 @@ struct NodeEventStatus {
 			return;
 		} else if (type == "monster") {
 			for (auto it : alive_monsters) {
-				files.push_back(it.first);
-			}
-		} else if (type == "obj") {
-			for (auto it : pickable_obj) {
 				files.push_back(it.first);
 			}
 		}
@@ -798,7 +650,7 @@ struct NodeStatus {
 	}
 	
 	int do_open(std::string name) {
-		return event2->do_open(name);
+		return event1->do_open(name);
 	}
 	
 	void list_files(std::vector<std::string> &files) {
@@ -828,7 +680,6 @@ struct TowerStatus {
 	
 	std::string readme_file;
 	std::string fight_file;
-	std::string open_file;
 	
 	std::string read_disk_file(const char *path) {
 		FILE *f = fopen(path, "r");
@@ -864,7 +715,6 @@ struct TowerStatus {
 		
 		readme_file = read_disk_file("tower-README.txt");
 		fight_file = read_disk_file("tower-fight.txt");
-		open_file = read_disk_file("tower-open.txt");
 	}
 	
 	std::string get_status() {
@@ -889,14 +739,6 @@ struct TowerStatus {
 			content = fight_file;
 			can_exec = true;
 			return 0;
-		} else if (name == ".open_log") {
-			content = player->get_open_log();
-			can_exec = false;
-			return 0;
-		} else if (name == "pickup") {
-			content = open_file;
-			can_exec = true;
-			return 0;
 		} else {
 			return -ENOENT;
 		}
@@ -906,7 +748,6 @@ struct TowerStatus {
 		files.push_back(".README");
 		files.push_back(".status");
 		files.push_back(".fight_log");
-		files.push_back(".open_log");
 	}
 	
 };
@@ -1056,9 +897,6 @@ struct TowerGame {
 		std::string content(buffer, size);
 		if (content == "open") {
 			int ret = do_open(path);
-			if (ret == 0) {
-				ret = 5;
-			}
 			return ret;
 		}
 		if (content == "fight") {
