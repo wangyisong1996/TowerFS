@@ -249,6 +249,7 @@ struct TowerConfig {
 			
 		for (Obj *conf : obj) {
 			obj_map[conf->name] = conf;
+			obj_map[conf->type] = conf;
 		}
 	}
 	
@@ -389,7 +390,7 @@ struct PlayerStatus {
 		std::string w="";
 		for(auto i:obj)
 		{
-			//if(i->cnt>0) FOR_DEBUG
+			if(i->cnt>0)
 			{
 				char buf2[100];
 				w=w+i->name;
@@ -652,7 +653,6 @@ struct NodeEventStatus {
 					pickable_obj.erase(name);
 				}
 			}
-			player->do_open(name);
 			return 0;
 		}
 	}
@@ -770,7 +770,7 @@ struct NodeStatus {
 	}
 	
 	int do_open(std::string name) {
-		return event1->do_open(name);
+		return event2->do_open(name);
 	}
 	
 	void list_files(std::vector<std::string> &files) {
