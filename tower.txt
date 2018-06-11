@@ -8,13 +8,23 @@ Red Slime
 RSLM
 40 12 2 2
 
-3
-Yellowkey
+8
+YellowKey
 YK
 RedKey
 RK
 BlueKey
 BK
+RedBottle
+RB
+BlueBottle
+BB
+RedStone
+RS
+BlueStone
+BS
+Treasure
+TS
 
 4
 
@@ -30,8 +40,10 @@ monster
 1
 GSLM
 obj
-1
-YK
+3
+YellowKey
+RedStone
+RedBottle
 2
 passage Room 2
 passage Room 3
@@ -42,10 +54,11 @@ monster
 GSLM
 RSLM
 obj
-3
-RK
-RK
-BK
+4
+Treasure
+RedKey
+RedKey
+BlueKey
 1
 passage Room 3
 

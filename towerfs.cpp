@@ -389,6 +389,8 @@ struct PlayerStatus {
 		sprintf(buf, "HP: %d\nATK: %d\nDEF %d\nGOLD: %d\n\n", HP, ATK, DEF, GOLD);
 		std::string w="";
 		for(auto i:obj)
+		if(i->name != "RedBottle" && i->name != "RB" && i->name != "BlueBottle" && i->name != "BB" && i->name != "RedStone" &&\
+		 i->name != "RS" && i->name != "BlueStone" && i->name != "BS" && i->name != "Treasure" && i->name != "TS")
 		{
 			if(i->cnt>0)
 			{
@@ -466,8 +468,34 @@ struct PlayerStatus {
 		if (!config->get_obj_status(name)) {
 			throw "Unknown obj error";
 		}
-		open_log = "Open "+name+"\n";
-		
+		open_log = "Pickup "+name+"\n";
+		if (name == "RB" || name == "RedBottle")
+		{
+			open_log += "+ 100HP\n";
+			HP += 100;
+		}
+		if (name == "BB" || name == "BlueBottle")
+		{
+			open_log += "+ 200HP\n";
+			HP += 200;
+		}
+		if (name == "RS" || name == "RedStone")
+		{
+			open_log += "+ 1 ATK\n";
+			ATK += 1;
+		}
+		if (name == "BS" || name == "BlueStone")
+		{
+			open_log += "+ 1 DEF\n";
+			DEF += 1;
+		}
+		if (name == "TB" || name == "Treasure")
+		{
+			open_log += "+ 5 ATK\n+ 5 DEF\n+ 500 HP\n";
+			ATK += 5;
+			DEF += 5;
+			HP += 500;
+		}
 		return true;
 	}
 	
@@ -865,7 +893,7 @@ struct TowerStatus {
 			content = player->get_open_log();
 			can_exec = false;
 			return 0;
-		} else if (name == "open") {
+		} else if (name == "pickup") {
 			content = open_file;
 			can_exec = true;
 			return 0;
