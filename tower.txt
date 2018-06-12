@@ -26,9 +26,18 @@ BS
 Treasure
 TS
 
+3
+YellowDoor
+YD
+RedDoor
+RD
+BlueDoor
+BD
+
 4
 
 Start
+none
 none
 none
 2
@@ -36,6 +45,7 @@ passage Room 1
 passage Room 2
 
 Room 1
+none
 monster
 1
 GSLM
@@ -49,6 +59,9 @@ passage Room 2
 passage Room 3
 
 Room 2
+door
+1
+YellowDoor
 monster
 2
 GSLM
@@ -63,6 +76,7 @@ BlueKey
 passage Room 3
 
 Room 3
+none
 monster
 2
 RSLM
